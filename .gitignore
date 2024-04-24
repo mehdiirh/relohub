@@ -1,0 +1,25 @@
+.env
+venv
+celerybeat-schedule
+.idea
+*.pyc
+*.sqlite3
+*.db
+*.session
+*.session-journal
+test.py
+*.sql
+/test*.py
+/logs/*
+
+# docker
+docker-compose-local.yml
+docker.env
+
+# media
+/static
+**/.DS_Store
+/fixtures
+
+# don't ignore
+!.gitkeep
