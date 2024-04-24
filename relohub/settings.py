@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     # local apps
+    "core",
+    "user",
 ]
 
 GATEWAYS = []
@@ -139,4 +141,4 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 
-# AUTH_USER_MODEL = "user.User"
+AUTH_USER_MODEL = "user.User"
