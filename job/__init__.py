@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 class JobStatus(TextChoices):
 
     PARTIALLY_PROCEEDED = "PARTIALLY_PROCEEDED", _("Partially Proceeded")
+    FULLY_PROCEEDED = "FULLY_PROCEEDED", _("Fully Proceeded")
     WAITING_FOR_REVIEW = "WAIT_FOR_REVIEW", _("Waiting For Review")
     ACCEPTED = "LISTED", _("Listed")
     REJECTED = "REJECTED", _("Rejected")
