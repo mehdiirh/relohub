@@ -120,7 +120,7 @@ def search_jobs():
     lock_expiry=60 * 20,
 )
 def process_jobs():
-    jobs = Job.objects.filter(is_active=True, status=JobStatus.PARTIALLY_PROCEEDED)[:20]
+    jobs = Job.objects.filter(is_active=True, status=JobStatus.PARTIALLY_PROCEEDED)[:50]
 
     client = get_client()
 
