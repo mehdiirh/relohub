@@ -20,6 +20,8 @@ docker.env
 /static
 **/.DS_Store
 /fixtures
+/media/company/*
+/media/job/locations/flags/*
 
 # don't ignore
 !.gitkeep
