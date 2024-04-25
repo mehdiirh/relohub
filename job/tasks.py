@@ -152,3 +152,5 @@ def process_jobs():
 
         job.status = JobStatus.FULLY_PROCEEDED
         job.save()
+
+        default_evade()
