@@ -1,6 +1,6 @@
-import datetime
-
+import pytz
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from core.models import ModelWithMetadata
@@ -109,6 +109,8 @@ class Job(ModelWithMetadata):
 
     def save(self, *args, **kwargs):
         if isinstance(self.listed_at, (int, float)):
-            self.listed_at = datetime.datetime.fromtimestamp(self.listed_at)
+            self.listed_at = timezone.datetime.fromtimestamp(
+                self.listed_at / 1000, tz=pytz.UTC
+            )
 
         super().save(*args, **kwargs)
