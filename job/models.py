@@ -3,7 +3,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from core.models import ModelWithMetadata
+from core.models import ModelWithMetadata, ImageFieldRename
 from job import JobStatus
 
 
@@ -39,9 +39,13 @@ class JobLocation(ModelWithMetadata):
         verbose_name_plural = _("Job Locations")
 
     title = models.CharField(_("title"), max_length=128)
+    iso_code = models.CharField(_("ISO code"), max_length=4)
     linkedin_geo_id = models.CharField(_("linkedin geo ID"), max_length=32)
     flag_emoji = models.CharField(_("flag emoji"), max_length=8)
-    flag_image = models.ImageField(_("flag image"), upload_to="job/locations/flags")
+    flag_image = models.ImageField(
+        _("flag image"),
+        upload_to=ImageFieldRename("job/locations/flags", "iso_code"),
+    )
 
     def __str__(self):
         return f"{self.flag_emoji} {self.title} #{self.linkedin_geo_id}"

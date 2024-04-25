@@ -1,9 +1,21 @@
-from core.choices import ModelActionChoicesBase
 from django.db import models
 from django.db.models import F
+from django.utils.deconstruct import deconstructible
 from django.utils.translation import gettext_lazy as _
 
+from core.choices import ModelActionChoicesBase
 from core.utils import to_global_id
+
+
+@deconstructible
+class ImageFieldRename:
+    def __init__(self, path: str, rename_attr: str):
+        self.path = path.removesuffix("/")
+        self.rename_attr = rename_attr
+
+    def __call__(self, instance, filename):
+        file_extension = filename.split(".")[-1]
+        return f"{self.path}/{getattr(instance, self.rename_attr)}.{file_extension}"
 
 
 class ModelWithMetadata(models.Model):
