@@ -1,3 +1,114 @@
-from django.db import models
+import datetime
 
-# Create your models here.
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+
+from core.models import ModelWithMetadata
+from job import JobStatus
+
+
+class Company(ModelWithMetadata):
+    class Meta:
+        verbose_name = _("Company")
+        verbose_name_plural = _("Companies")
+
+    name = models.CharField(_("name"), max_length=256)
+    universal_name = models.CharField(_("universal name"), max_length=256)
+    linkedin_id = models.CharField(_("linkedin ID"), max_length=32)
+    logo = models.ImageField(_("logo"), upload_to="company/", null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.name} #{self.linkedin_id}"
+
+
+class JobTitle(ModelWithMetadata):
+    class Meta:
+        verbose_name = _("Job Title")
+        verbose_name_plural = _("Job Titles")
+
+    title = models.CharField(_("title"), max_length=128)
+    linkedin_id = models.CharField(_("linkedin ID"), max_length=32)
+
+    def __str__(self):
+        return f"{self.title} #{self.linkedin_id}"
+
+
+class JobLocation(ModelWithMetadata):
+    class Meta:
+        verbose_name = _("Job Location")
+        verbose_name_plural = _("Job Locations")
+
+    title = models.CharField(_("title"), max_length=128)
+    linkedin_geo_id = models.CharField(_("linkedin geo ID"), max_length=32)
+    flag_emoji = models.CharField(_("flag emoji"), max_length=8)
+    flag_image = models.ImageField(_("flag image"), upload_to="job/locations/flags")
+
+    def __str__(self):
+        return f"{self.flag_emoji} {self.title} #{self.linkedin_geo_id}"
+
+
+class Job(ModelWithMetadata):
+    class Meta:
+        verbose_name = _("Job")
+        verbose_name_plural = _("Jobs")
+
+    linkedin_id = models.CharField(_("linkedin ID"), max_length=32)
+
+    title = models.CharField(_("title"), max_length=256)
+    description = models.TextField(
+        _("description"),
+        null=True,
+        blank=True,
+    )
+    attributes = models.JSONField(
+        _("attributes"),
+        default=dict,
+        blank=True,
+    )
+    full_location = models.CharField(
+        _("full location"),
+        max_length=128,
+        null=True,
+        blank=True,
+    )
+    listed_at = models.DateTimeField(_("listed at"), null=True, blank=True)
+
+    on_site = models.BooleanField(_("on-site"), default=False)
+    hybrid = models.BooleanField(_("hybrid"), default=False)
+    remote = models.BooleanField(_("remote"), default=False)
+
+    full_time = models.BooleanField(_("full_time"), default=False)
+    part_time = models.BooleanField(_("part_time"), default=False)
+    contract = models.BooleanField(_("contract"), default=False)
+
+    status = models.CharField(
+        _("status"),
+        max_length=32,
+        choices=JobStatus.choices,
+        default=JobStatus.PARTIALLY_PROCEEDED,
+    )
+
+    company = models.ForeignKey(
+        to=Company,
+        verbose_name=_("company"),
+        related_name="jobs",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    location = models.ForeignKey(
+        to=JobLocation,
+        verbose_name=_("location"),
+        related_name="jobs",
+        on_delete=models.CASCADE,
+    )
+    job_titles = models.ManyToManyField(to=JobTitle, verbose_name=_("job titles"))
+
+    def __str__(self):
+        return f"{self.title} @ {self.company or '-'}"
+
+    def save(self, *args, **kwargs):
+        if isinstance(self.listed_at, (int, float)):
+            self.listed_at = datetime.datetime.fromtimestamp(self.listed_at)
+
+        super().save(*args, **kwargs)

@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     # local apps
     "core",
     "user",
+    "job",
+    "linkedin",
 ]
 
 GATEWAYS = []
