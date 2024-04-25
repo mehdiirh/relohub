@@ -106,7 +106,11 @@ class Job(ModelWithMetadata):
         related_name="jobs",
         on_delete=models.CASCADE,
     )
-    job_titles = models.ManyToManyField(to=JobTitle, verbose_name=_("job titles"))
+    job_titles = models.ManyToManyField(
+        to=JobTitle,
+        verbose_name=_("job titles"),
+        related_name="jobs",
+    )
 
     def __str__(self):
         return f"{self.title} @ {self.company or '-'}"
