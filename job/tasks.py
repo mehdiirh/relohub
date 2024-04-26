@@ -253,7 +253,7 @@ def run_process_jobs():
         .distinct()
     )
 
-    chunk = 30
+    chunk = 10
     pending_task_args = []
     for offset in range(0, len(jobs), chunk):
         sliced_jobs = jobs[offset : offset + chunk]
