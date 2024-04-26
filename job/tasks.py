@@ -168,16 +168,19 @@ def process_jobs(account_pk: int, job_pks: list[int]):
                 default_evade()
                 continue
 
-        while True:
-            try:
-                job_skills = client.get_job_skills(job.linkedin_id)
-                break
-            except requests.exceptions.JSONDecodeError:
-                default_evade()
-                continue
-
         # noinspection PyUnboundLocalVariable
-        job.company = resolve_company(job_data)
+        if job_data["jobState"] != "LISTED":
+            job.status = JobStatus.EXPIRED
+            job.save()
+            continue
+
+        try:
+            # noinspection PyUnboundLocalVariable
+            job.company = resolve_company(job_data)
+        except KeyError:
+            job.delete()
+            continue
+
         job.description = job_data["description"]["text"]
         job.attributes = job_data["description"]["attributes"]
         job.remote = job_data["workRemoteAllowed"]
@@ -192,6 +195,14 @@ def process_jobs(account_pk: int, job_pks: list[int]):
                 job.remote = True
             if workplace_type == "3":
                 job.hybrid = True
+
+        while True:
+            try:
+                job_skills = client.get_job_skills(job.linkedin_id)
+                break
+            except requests.exceptions.JSONDecodeError:
+                default_evade()
+                continue
 
         # noinspection PyUnboundLocalVariable
         for skill_data in job_skills["skillMatchStatuses"]:
