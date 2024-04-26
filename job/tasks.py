@@ -59,8 +59,8 @@ def resolve_company(job_data: dict):
     unique_on=["account_pk"],
     raise_on_duplicate=True,
     name="job.search_jobs",
-    time_limit=10 * 60,
-    lock_expiry=10 * 60,
+    time_limit=6 * 60,
+    lock_expiry=6 * 60,
 )
 def search_jobs(account_pk: int, location_pk: int, job_title_pk: int):
     account = LinkedinAccount.objects.get(pk=account_pk)
@@ -116,7 +116,6 @@ def search_jobs(account_pk: int, location_pk: int, job_title_pk: int):
 @app.task(
     base=Singleton,
     name="job.run_search_jobs",
-    time_limit=60 * 60,
     lock_expiry=60 * 60,
 )
 def run_search_jobs():
@@ -150,8 +149,8 @@ def run_search_jobs():
     unique_on=["account_pk"],
     raise_on_duplicate=True,
     name="job.process_jobs",
-    time_limit=10 * 60,
-    lock_expiry=10 * 60,
+    time_limit=3 * 60,
+    lock_expiry=3 * 60,
 )
 def process_jobs(account_pk: int, job_pks: list[int]):
     account = LinkedinAccount.objects.get(pk=account_pk)
@@ -253,7 +252,6 @@ def process_jobs(account_pk: int, job_pks: list[int]):
 @app.task(
     base=Singleton,
     name="job.run_process_jobs",
-    time_limit=60 * 60,
     lock_expiry=60 * 60,
 )
 def run_process_jobs():
