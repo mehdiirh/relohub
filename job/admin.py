@@ -26,6 +26,7 @@ class JobTitleAdmin(BaseModelAdmin):
 @admin.register(JobSkill)
 class JobSkillAdmin(BaseModelAdmin):
     list_display = ["name", "linkedin_id", "jobs_count"]
+    search_fields = ["name", "linkedin_id"]
 
     @remove_exponent_decorator
     def jobs_count(self, obj):
@@ -46,3 +47,4 @@ class JobAdmin(BaseModelAdmin):
     list_display = ["id", "title", "company", "location", "full_location", "status"]
     list_filter = ["location", "company", "job_titles"]
     search_fields = ["title__icontains", "description__icontains"]
+    autocomplete_fields = ["job_skills"]
