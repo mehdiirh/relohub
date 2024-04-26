@@ -14,7 +14,12 @@ class Company(ModelWithMetadata):
 
     name = models.CharField(_("name"), max_length=256)
     universal_name = models.CharField(_("universal name"), max_length=256)
-    linkedin_id = models.CharField(_("linkedin ID"), max_length=32)
+    linkedin_id = models.CharField(
+        _("linkedin ID"),
+        max_length=32,
+        unique=True,
+        db_index=True,
+    )
     logo = models.ImageField(_("logo"), upload_to="company/", null=True, blank=True)
 
     def __str__(self):
@@ -27,10 +32,32 @@ class JobTitle(ModelWithMetadata):
         verbose_name_plural = _("Job Titles")
 
     title = models.CharField(_("title"), max_length=128)
-    linkedin_id = models.CharField(_("linkedin ID"), max_length=32)
+    linkedin_id = models.CharField(
+        _("linkedin ID"),
+        max_length=32,
+        unique=True,
+        db_index=True,
+    )
 
     def __str__(self):
         return f"{self.title} #{self.linkedin_id}"
+
+
+class JobSkill(ModelWithMetadata):
+    class Meta:
+        verbose_name = _("Job Skill")
+        verbose_name_plural = _("Job Skills")
+
+    name = models.CharField(_("name"), max_length=128)
+    linkedin_id = models.CharField(
+        _("linkedin ID"),
+        max_length=32,
+        unique=True,
+        db_index=True,
+    )
+
+    def __str__(self):
+        return f"{self.name} #{self.linkedin_id}"
 
 
 class JobLocation(ModelWithMetadata):
@@ -56,7 +83,12 @@ class Job(ModelWithMetadata):
         verbose_name = _("Job")
         verbose_name_plural = _("Jobs")
 
-    linkedin_id = models.CharField(_("linkedin ID"), max_length=32)
+    linkedin_id = models.CharField(
+        _("linkedin ID"),
+        max_length=32,
+        unique=True,
+        db_index=True,
+    )
 
     title = models.CharField(_("title"), max_length=256)
     description = models.TextField(
@@ -111,6 +143,13 @@ class Job(ModelWithMetadata):
         verbose_name=_("job titles"),
         related_name="jobs",
     )
+    job_skills = models.ManyToManyField(
+        to=JobSkill,
+        verbose_name=_("job skills"),
+        related_name="jobs",
+    )
+
+    points = models.PositiveIntegerField(_("points"), default=0)
 
     def __str__(self):
         return f"{self.title} @ {self.company or '-'}"
