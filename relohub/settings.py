@@ -144,3 +144,23 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 
 AUTH_USER_MODEL = "user.User"
+
+LINKEDIN_JOB_DESCRIPTION_KEYWORDS = [
+    "relocation",
+    "relo",
+    "relocate",
+    "visa",
+]
+
+LINKEDIN_JOB_DESCRIPTION_KEYWORD_COMPLEMENTS = [
+    "costs",
+    "allowance",
+    "bonus",
+    "coverage",
+    "package",
+    "sponsorship",
+    "support",
+    "assistance",
+    "assistant",
+    "cover",
+]
