@@ -70,9 +70,11 @@ def search_jobs(account_pk: int, location_pk: int, job_title_pk: int):
     client = account.client
 
     jobs = []
-    limit, chunk, offset = 200, 20, 0
+    limit, chunk, offset, retries = 200, 20, 0, 20
 
     while True:
+        errors = 0
+
         try:
             new_jobs = client.search_jobs(
                 location_geo_id=location.linkedin_geo_id,
@@ -82,6 +84,10 @@ def search_jobs(account_pk: int, location_pk: int, job_title_pk: int):
                 limit=chunk,
             )
         except requests.exceptions.JSONDecodeError as e:
+            if errors >= retries:
+                raise
+
+            errors += 1
             default_evade()
             continue
 
@@ -158,12 +164,19 @@ def process_jobs(account_pk: int, job_pks: list[int]):
 
     client = account.client
 
+    retries = 20
     for job in jobs:
+
+        errors = 0
         while True:
             try:
                 job_data = client.get_job(job.linkedin_id)
                 break
             except requests.exceptions.JSONDecodeError:
+                if errors >= retries:
+                    raise
+
+                errors += 1
                 default_evade()
                 continue
 
@@ -195,11 +208,16 @@ def process_jobs(account_pk: int, job_pks: list[int]):
             if workplace_type == "3":
                 job.hybrid = True
 
+        errors = 0
         while True:
             try:
                 job_skills = client.get_job_skills(job.linkedin_id)
                 break
             except requests.exceptions.JSONDecodeError:
+                if errors >= retries:
+                    raise
+
+                errors += 1
                 default_evade()
                 continue
 
