@@ -4,7 +4,13 @@ from decimal import Decimal
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
-from core.utils import get_random_hex, remove_exponent, from_global_id, to_global_id
+from core.utils import (
+    get_random_hex,
+    remove_exponent,
+    from_global_id,
+    to_global_id,
+    intcomma_decorator,
+)
 from user.models import User
 
 
@@ -42,6 +48,57 @@ class UtilsTestCase(TestCase):
 
         result = remove_exponent(6500)
         self.assertEqual(result, Decimal("6500"), "Integer should not be changed")
+
+    def test_intcomma_decorator(self):
+
+        @intcomma_decorator()
+        def _intcomma_function(number):
+            return number
+
+        @intcomma_decorator(prefix="PREFIXED")
+        def _intcomma_prefix_function(number):
+            return number
+
+        @intcomma_decorator(suffix="SUFFIXED")
+        def _intcomma_suffix_function(number):
+            return number
+
+        @intcomma_decorator(prefix="PREFIXED", suffix="SUFFIXED")
+        def _intcomma_prefix_suffix_function(number):
+            return number
+
+        result = _intcomma_function(100)
+        self.assertEqual(result, "100")
+
+        result = _intcomma_function(1000)
+        self.assertEqual(result, "1,000")
+
+        result = _intcomma_function(1000000)
+        self.assertEqual(result, "1,000,000")
+
+        result = _intcomma_function(Decimal("1000"))
+        self.assertEqual(result, "1,000")
+
+        result = _intcomma_function(1000.55)
+        self.assertEqual(result, "1,000.55")
+
+        result = _intcomma_function(Decimal("1000.55"))
+        self.assertEqual(result, "1,000.55")
+
+        result = _intcomma_function(None)
+        self.assertEqual(result, "None")
+
+        # test with prefix
+        result = _intcomma_prefix_function(1000)
+        self.assertEqual(result, "PREFIXED1,000")
+
+        # test with suffix
+        result = _intcomma_suffix_function(1000)
+        self.assertEqual(result, "1,000SUFFIXED")
+
+        # test with prefix
+        result = _intcomma_prefix_suffix_function(1000)
+        self.assertEqual(result, "PREFIXED1,000SUFFIXED")
 
 
 class GlobalIDTestCase(TestCase):
