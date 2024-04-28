@@ -69,9 +69,9 @@ class JobTitle(ModelWithMetadata):
         children = self.children.all()
         if recursive:
             for child in children:
-                children.union(child.get_children(recursive=True))
+                children = children.union(child.get_children(recursive=True))
 
-        return children.distinct()
+        return children
 
     def save(self, *args, **kwargs):
         if self.other_names:
