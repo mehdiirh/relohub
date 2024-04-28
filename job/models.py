@@ -205,8 +205,13 @@ class Job(ModelWithMetadata):
 
     def save(self, *args, **kwargs):
         if isinstance(self.listed_at, (int, float)):
-            self.listed_at = timezone.datetime.fromtimestamp(
-                self.listed_at / 1000, tz=pytz.UTC
-            )
+            try:
+                self.listed_at = timezone.datetime.fromtimestamp(
+                    self.listed_at, tz=pytz.UTC
+                )
+            except ValueError:
+                self.listed_at = timezone.datetime.fromtimestamp(
+                    self.listed_at / 1000, tz=pytz.UTC
+                )
 
         super().save(*args, **kwargs)
