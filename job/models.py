@@ -75,9 +75,12 @@ class JobTitle(ModelWithMetadata):
 
     def save(self, *args, **kwargs):
         if self.other_names:
-            self.other_names = ";".join(
-                [name.strip() for name in self.other_names.split(";") if name]
-            )
+            names = []
+            for n in self.other_names.split(";"):
+                if n and n not in names:
+                    names.append(n.strip())
+            self.other_names = ";".join(names)
+
         super().save(*args, **kwargs)
 
     def __str__(self):
