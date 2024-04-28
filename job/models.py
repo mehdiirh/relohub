@@ -32,12 +32,53 @@ class JobTitle(ModelWithMetadata):
         verbose_name_plural = _("Job Titles")
 
     title = models.CharField(_("title"), max_length=128)
+    parent = models.ForeignKey(
+        to="self",
+        verbose_name=_("parent"),
+        related_name="children",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    other_names = models.TextField(
+        _("other names"),
+        max_length=512,
+        null=True,
+        blank=True,
+        help_text=_("semicolon separated names"),
+    )
     linkedin_id = models.CharField(
         _("linkedin ID"),
         max_length=32,
         unique=True,
         db_index=True,
     )
+
+    def get_other_names(self):
+        return self.other_names.split(";") if self.other_names else []
+
+    def add_other_name(self, name: str):
+        other_names = self.get_other_names()
+        if name.lower() not in list(map(lambda n: n.lower(), other_names)):
+            other_names.append(name)
+        self.other_names = ";".join(other_names)
+        self.save()
+
+    def get_children(self, recursive=False):
+
+        children = self.children.all()
+        if recursive:
+            for child in children:
+                children |= child.get_children(recursive=True)
+
+        return children
+
+    def save(self, *args, **kwargs):
+        if self.other_names:
+            self.other_names = ";".join(
+                [name.strip() for name in self.other_names.split(";") if name]
+            )
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.title} #{self.linkedin_id}"
