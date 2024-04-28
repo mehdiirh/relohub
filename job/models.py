@@ -69,9 +69,9 @@ class JobTitle(ModelWithMetadata):
         children = self.children.all()
         if recursive:
             for child in children:
-                children |= child.get_children(recursive=True)
+                children.union(child.get_children(recursive=True))
 
-        return children
+        return children.distinct()
 
     def save(self, *args, **kwargs):
         if self.other_names:
@@ -170,6 +170,7 @@ class Job(ModelWithMetadata):
         verbose_name=_("company"),
         related_name="jobs",
         on_delete=models.CASCADE,
+        limit_choices_to={"is_active": True},
         null=True,
         blank=True,
     )
@@ -178,16 +179,20 @@ class Job(ModelWithMetadata):
         verbose_name=_("location"),
         related_name="jobs",
         on_delete=models.CASCADE,
+        limit_choices_to={"is_active": True},
     )
+
     job_titles = models.ManyToManyField(
         to=JobTitle,
         verbose_name=_("job titles"),
         related_name="jobs",
+        limit_choices_to={"is_active": True, "parent__isnull": True},
     )
     job_skills = models.ManyToManyField(
         to=JobSkill,
         verbose_name=_("job skills"),
         related_name="jobs",
+        limit_choices_to={"is_active": True},
     )
 
     points = models.PositiveIntegerField(_("points"), default=0)
