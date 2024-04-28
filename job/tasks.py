@@ -215,8 +215,8 @@ def process_jobs(account_pk: int, job_pks: list[int]):
     Full process provided jobs
 
     Args:
-        account_pk: LinkedinAccount primary key
-        job_pks: A list of Job primary keys
+        account_pk: LinkedinAccount primary-key
+        job_pks: A list of Job primary-keys
     """
 
     account = LinkedinAccount.objects.get(pk=account_pk)
