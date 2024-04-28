@@ -16,6 +16,16 @@ from relohub import celery_app as app
 
 
 def get_least_used_account() -> LinkedinAccount:
+    """
+    Get least used LinkedinAccount
+
+    Raises:
+        NoLinkedinAccountError: If there's no active LinkedinAccount available
+
+    Returns:
+        LinkedinAccount: The Least used Linkedin Account instance
+    """
+
     linkedin_account: LinkedinAccount = (
         LinkedinAccount.objects.filter(is_active=True).order_by("last_used").first()
     )
@@ -29,7 +39,17 @@ def get_least_used_account() -> LinkedinAccount:
     return linkedin_account
 
 
-def resolve_company(job_data: dict):
+def resolve_company(job_data: dict) -> Company:
+    """
+    Resolve company of the job, save name, id, universal name and logo to the database
+
+    Args:
+        job_data: Job data fetched from Linkedin
+
+    Returns:
+        Company: created/updated company instance
+    """
+
     company_data = job_data["companyDetails"][
         "com.linkedin.voyager.deco.jobs.web.shared.WebCompactJobPostingCompany"
     ]["companyResolutionResult"]
@@ -41,6 +61,7 @@ def resolve_company(job_data: dict):
             "universal_name": company_data["universalName"],
         },
     )
+
     if not company.logo:
         if (
             logo := company_data.get("logo", {})
@@ -68,6 +89,15 @@ def resolve_company(job_data: dict):
     lock_expiry=6 * 60,
 )
 def search_jobs(account_pk: int, location_pk: int, job_title_pk: int):
+    """
+    Search jobs based on provided args
+
+    Args:
+        account_pk: LinkedinAccount primary-key
+        location_pk: JobLocation primary-key
+        job_title_pk: JobTitle primary-key
+    """
+
     account = LinkedinAccount.objects.get(pk=account_pk)
     location = JobLocation.objects.get(pk=location_pk)
     job_title = JobTitle.objects.get(pk=job_title_pk)
@@ -100,7 +130,7 @@ def search_jobs(account_pk: int, location_pk: int, job_title_pk: int):
                 listed_at=24 * 60 * 60,
                 limit=chunk,
             )
-        except requests.exceptions.JSONDecodeError as e:
+        except requests.exceptions.JSONDecodeError:
             if errors >= retries:
                 raise
 
@@ -142,6 +172,11 @@ def search_jobs(account_pk: int, location_pk: int, job_title_pk: int):
     lock_expiry=60 * 60,
 )
 def run_search_jobs():
+    """
+    Run search job tasks.
+    Break the whole task in smaller parts, to parallel the data loading
+    """
+
     locations = JobLocation.objects.filter(is_active=True).all()
     job_titles = JobTitle.objects.filter(is_active=True, parent__isnull=True).all()
 
@@ -176,6 +211,14 @@ def run_search_jobs():
     lock_expiry=3 * 60,
 )
 def process_jobs(account_pk: int, job_pks: list[int]):
+    """
+    Full process provided jobs
+
+    Args:
+        account_pk: LinkedinAccount primary key
+        job_pks: A list of Job primary keys
+    """
+
     account = LinkedinAccount.objects.get(pk=account_pk)
     jobs = Job.objects.filter(pk__in=job_pks).all()
 
@@ -250,7 +293,7 @@ def process_jobs(account_pk: int, job_pks: list[int]):
             )
             job.job_skills.add(skill_object)
 
-        # key in description: 1 points
+        # key in description: 1 point
         # key in title: 2 points
         # key+complement in description: 3 points
         # key+title in description: 5 points
@@ -295,6 +338,11 @@ def process_jobs(account_pk: int, job_pks: list[int]):
     lock_expiry=60 * 60,
 )
 def run_process_jobs():
+    """
+    Run process job tasks.
+    Break the whole task in smaller parts, to parallel the data loading
+    """
+
     jobs = (
         Job.objects.filter(is_active=True, status=JobStatus.PARTIALLY_PROCEEDED)
         .order_by("created_at")
