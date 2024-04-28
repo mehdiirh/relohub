@@ -67,6 +67,18 @@ def search_jobs(account_pk: int, location_pk: int, job_title_pk: int):
     location = JobLocation.objects.get(pk=location_pk)
     job_title = JobTitle.objects.get(pk=job_title_pk)
 
+    job_title_ids = list(
+        set(
+            [job_title.linkedin_id]
+            + list(
+                job_title.get_children(recursive=True).values_list(
+                    "linkedin_id",
+                    flat=True,
+                )
+            )
+        )
+    )
+
     client = account.client
 
     jobs = []
@@ -78,7 +90,7 @@ def search_jobs(account_pk: int, location_pk: int, job_title_pk: int):
         try:
             new_jobs = client.search_jobs(
                 location_geo_id=location.linkedin_geo_id,
-                job_title=[job_title.linkedin_id],
+                job_title=job_title_ids,
                 offset=offset,
                 listed_at=24 * 60 * 60,
                 limit=chunk,
@@ -126,7 +138,7 @@ def search_jobs(account_pk: int, location_pk: int, job_title_pk: int):
 )
 def run_search_jobs():
     locations = JobLocation.objects.filter(is_active=True).all()
-    job_titles = JobTitle.objects.filter(is_active=True).all()
+    job_titles = JobTitle.objects.filter(is_active=True, parent__isnull=True).all()
 
     pending_task_args = []
     for location in locations:
@@ -222,7 +234,7 @@ def process_jobs(account_pk: int, job_pks: list[int]):
                 continue
 
         # noinspection PyUnboundLocalVariable
-        for skill_data in job_skills["skillMatchStatuses"]:
+        for skill_data in job_skills.get("skillMatchStatuses", []):
             skill = skill_data["skill"]
             name = skill["name"]
             linkedin_id = skill["entityUrn"].split(":")[-1]
@@ -237,24 +249,29 @@ def process_jobs(account_pk: int, job_pks: list[int]):
         # key in title: 2 points
         # key+complement in description: 3 points
         # key+title in description: 5 points
-        job_contains_keywords = False
         points = 0
+        description_contains_keywords, title_contains_keywords = False, False
+        _job_title, _job_description = job.title.lower(), job.description.lower()
+
         for key in settings.LINKEDIN_JOB_DESCRIPTION_KEYWORDS:
-            if key.lower() in job.description.lower():
-                job_contains_keywords = True
+            key = key.lower()
+
+            if key in _job_description:
+                description_contains_keywords = True
                 points += 1
 
-            if key.lower() in job.title.lower():
-                job_contains_keywords = True
+            if key in _job_title:
+                title_contains_keywords = True
                 points += 2
 
-        if job_contains_keywords:
-            for key_complement in settings.LINKEDIN_JOB_DESCRIPTION_KEYWORD_COMPLEMENTS:
-                if key_complement.lower() in job.description.lower():
-                    points += 3
+        for key_complement in settings.LINKEDIN_JOB_DESCRIPTION_KEYWORD_COMPLEMENTS:
+            key_complement = key_complement.lower()
 
-                if key_complement.lower() in job.title.lower():
-                    points += 5
+            if description_contains_keywords and (key_complement in _job_description):
+                points += 3
+
+            if title_contains_keywords and (key_complement in _job_title):
+                points += 5
 
         job.points = points
 
