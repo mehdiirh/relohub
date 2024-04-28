@@ -8,6 +8,7 @@ from django.core.files.base import ContentFile
 from django.utils import timezone
 from linkedin_api.linkedin import default_evade
 
+from core.exceptions import NoLinkedinAccountError
 from job import JobStatus
 from job.models import JobLocation, JobTitle, Job, Company, JobSkill
 from linkedin.models import LinkedinAccount
@@ -18,6 +19,10 @@ def get_least_used_account() -> LinkedinAccount:
     linkedin_account: LinkedinAccount = (
         LinkedinAccount.objects.filter(is_active=True).order_by("last_used").first()
     )
+
+    if not linkedin_account:
+        raise NoLinkedinAccountError("No active LinkedinAccount available.")
+
     linkedin_account.last_used = timezone.now()
     linkedin_account.save()
 
