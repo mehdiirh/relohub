@@ -7,9 +7,8 @@ celerybeat-schedule
 *.db
 *.session
 *.session-journal
-test.py
 *.sql
-/test*.py
+/_test*.py
 /logs/*
 
 # docker
