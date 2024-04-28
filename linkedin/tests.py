@@ -3,6 +3,7 @@ from django.test import TestCase
 from linkedin.models import HTTPProxy
 
 
+# noinspection HttpUrlsUsage
 class HTTPProxyModelTest(TestCase):
 
     def test_link_property_without_username_and_password(self):
