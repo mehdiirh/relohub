@@ -1,0 +1,103 @@
+
+services:
+  redis:
+    restart: always
+    image: library/redis:7.2.4-alpine3.19
+    ports:
+      - "${REDIS_BIND_PORT}:6379"
+    networks:
+      - relohub
+    volumes:
+      - redis:/data
+
+  mysql:
+    restart: always
+    image: mysql:8.0-debian
+    ports:
+      - "${DB_BIND_PORT}:3306"
+      - "33060:33060"
+    networks:
+      - relohub
+    volumes:
+      - database:/var/lib/msql
+    cap_add:
+      - SYS_NICE
+    env_file:
+      - ./docker.env
+    environment:
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_ROOT_PASSWORD=${DB_PASS}
+
+  website:
+    restart: unless-stopped
+    build:
+      context: .
+      args:
+        - DB_HOST=${DB_HOST}
+        - DB_PORT=${DB_PORT}
+        - DB_NAME=${DB_NAME}
+        - DB_USER=${DB_USER}
+        - DB_PASS=${DB_PASS}
+    container_name: relohub
+    image: relohub
+    command: sh run.sh
+    ports:
+      - "${RUN_ON}:8000"
+    networks:
+      - relohub
+    volumes:
+      - media:/app/media
+    depends_on:
+      - mysql
+      - redis
+    env_file:
+      - ./docker.env
+
+
+  celery:
+    restart: unless-stopped
+    image: relohub
+    command: celery -A relohub worker -l DEBUG
+    networks:
+      - relohub
+    depends_on:
+      - website
+    env_file:
+      - ./docker.env
+
+  celery-beat:
+    restart: unless-stopped
+    image: relohub
+    command: celery -A relohub beat -l DEBUG
+    networks:
+      - relohub
+    depends_on:
+      - celery
+    env_file:
+      - ./docker.env
+
+  celery-flower:
+    restart: always
+    image: relohub
+    command: celery -A relohub flower --basic_auth=${FLOWER_USERNAME}:${FLOWER_PASSWORD} -l DEBUG
+    ports:
+      - "${FLOWER_BIND_PORT}:5555"
+    networks:
+      - relohub
+    depends_on:
+      - celery
+    env_file:
+      - ./docker.env
+
+
+volumes:
+  redis:
+    driver: local
+  media:
+    driver: local
+  database:
+    driver: local
+
+networks:
+  relohub:
+    driver: bridge
