@@ -1,0 +1,91 @@
+{% extends "core/base_bootstrap.html" %}
+
+{% block head_title_tag %}Add job titles{% endblock %}
+
+{% block body %}
+
+    <div class="row">
+        <div class="ml-0 col-xl-4 col-lg-4 col-md-6 col-sm-6 p-3">
+            <h3 class="pb-3">Existing:</h3>
+            <div class="row">
+                {% for title in titles %}
+                    <div class="col-6 pb-2">
+                        <div class="card justify-content-center align-items-center">
+                            <div class="card-title">
+                                {{ title.title }}
+                            </div>
+                            <div class="card-body">
+                                {{ title.linkedin_id }}
+                            </div>
+                            <div class="card-footer">
+                                {% for child in title.children.all %}
+                                    <li>{{ child.title }}</li>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="mr-0 col-xl-4 col-lg-4 col-md-6 col-sm-6 p-3">
+            <h3 class="pb-3">To Add:</h3>
+            <div class="row">
+                {% for key, value in data.items %}
+                    <div class="col-6 pb-2">
+                        <div class="card justify-content-center align-items-center">
+                            <div class="card-title">
+                                <i class="fa fa-plus-circle text-success open-add"></i>
+                                {{ key }}
+                                <i class="fa fa-xmark-circle text-danger delete-item"></i>
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input name="linkedin-id" type="hidden" value="{{ key }}">
+                                    <input name="action" type="hidden" value="DELETE">
+                                </form>
+                            </div>
+                            <div class="card-body">
+                                {% for val in value %}
+                                    {{ val }}
+                                    <br>
+                                {% endfor %}
+                            </div>
+                            <div class="card-footer" style="display: none">
+                                <form method="POST" class="row gap-3">
+                                    {% csrf_token %}
+                                    <input class="form-control" name="name" type="text" placeholder="Name" value="{{ value.0 }}">
+                                    <input class="form-control" name="linkedin-id" type="hidden" value="{{ key }}">
+                                    <select name="parent" class="form-select">
+                                        <option value="">---</option>
+                                        {% for title in titles %}
+                                            <option value="{{ title.pk }}">{{ title.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="btn btn-sm btn-primary w-100">
+                                        <i class="fa fa-arrow-right"> Add</i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+{% endblock body %}
+
+
+{% block body_script_tags %}
+    <script>
+        $(".open-add").on("click", (e) => {
+            $(e.target).parent().parent().find(".card-footer").slideToggle();
+        });
+
+        $(".delete-item").on("click", (e) => {
+            let did_confirm = confirm("Are you sure?");
+            if (did_confirm) {
+                $(e.target).parent().find("form").submit();
+            }
+        });
+    </script>
+{% endblock %}

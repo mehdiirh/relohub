@@ -3,7 +3,10 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 
+from linkedin.views import add_job_titles
+
 urlpatterns = [
+    path("add_job_titles/", add_job_titles, name="add-job-title"),
     path("admin/", admin.site.urls),
 ]
 

@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html {% block html_tag %}lang="en"{% endblock %}>
+{% block html_tag_start %}{% endblock %}
+<head {% block head_tag %}{% endblock %}>
+    {% block head_tag_start %}{% endblock %}
+    {% block head_meta_tags %}
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    {% endblock %}
+    <title>{% block head_title_tag %}Title{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'core/fonts.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'core/fonts/fontawesome/css/all.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'core/base.css' %}">
+    {% block head_style_tags %}{% endblock %}
+    {% block head_script_tags %}{% endblock %}
+    {% block head_tag_end %}{% endblock %}
+</head>
+<body {% block body_tag %}{% endblock %}>
+{% block body %}{% endblock %}
+<script src="{% static 'core/vendor/jquery/jquery-3.2.1.min.js' %}"></script>
+<script src="{% static 'core/vendor/bootstrap/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'core/base.js' %}?v=1.0.1"></script>
+{% block body_script_tags %}{% endblock %}
+</body>
+{% block html_tag_end %}{% endblock %}
+</html>

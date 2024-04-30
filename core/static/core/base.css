@@ -1,0 +1,23 @@
+.circle-red {
+    border: 6px solid red;
+    border-radius: 50%;
+    height: 10px;
+    width: 10px;
+}
+
+.circle-green {
+    border: 6px solid #1e911a;
+    border-radius: 50%;
+    height: 10px;
+    width: 10px;
+}
+
+.fa-slow-spin {
+  -webkit-animation: fa-spin 3s infinite linear;
+  animation: fa-spin 3s infinite linear;
+}
+
+.fa-slower-spin {
+  -webkit-animation: fa-spin 6s infinite linear;
+  animation: fa-spin 6s infinite linear;
+}

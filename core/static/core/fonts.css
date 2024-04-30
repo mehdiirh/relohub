@@ -1,0 +1,33 @@
+@font-face {
+    font-family: Poppins-Medium;
+    src: url('./fonts/poppins/Poppins-Medium.ttf');
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Poppins-Bold;
+    src: url('./fonts/poppins/Poppins-Bold.ttf');
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Poppins-SemiBold;
+    src: url('./fonts/poppins/Poppins-SemiBold.ttf');
+    font-display: swap;
+}
+
+@font-face {
+    font-family: IRANSans-Regular;
+    src: url("./fonts/IranSans/IRANSansWeb_Medium.ttf");
+    font-display: swap;
+}
+
+@font-face {
+    font-family: IRANSans-Bold;
+    src: url("./fonts/IranSans/IRANSansWeb_Bold.ttf");
+    font-display: swap;
+}
+
+.font-sans {
+    font-family: IRANSans-Bold, Poppins-Bold, Arial, serif;
+}
