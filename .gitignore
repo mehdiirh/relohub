@@ -1,4 +1,5 @@
 .env
+docker.env
 venv
 celerybeat-schedule
 .idea
