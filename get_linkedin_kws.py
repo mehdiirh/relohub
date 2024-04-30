@@ -1,3 +1,4 @@
+import json
 import os
 
 import django
@@ -52,4 +53,3 @@ while True:
         data = json.load(open("keys.json", "r"))
         data.update(all_titles)
         json.dump(data, open("keys.json", "w"), indent=4)
-
