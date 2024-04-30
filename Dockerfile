@@ -1,12 +1,5 @@
 FROM python:3.11.8-alpine3.19
 
-#ARG RUN_ON
-#ARG DB_HOST
-#ARG DB_PORT
-#ARG DB_NAME
-#ARG DB_USER
-#ARG DB_PASS
-
 ### install packages
 RUN apk update && \
     apk add curl git bash && \
