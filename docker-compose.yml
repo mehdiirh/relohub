@@ -32,12 +32,6 @@ services:
     restart: unless-stopped
     build:
       context: .
-      args:
-        - DB_HOST=${DB_HOST}
-        - DB_PORT=${DB_PORT}
-        - DB_NAME=${DB_NAME}
-        - DB_USER=${DB_USER}
-        - DB_PASS=${DB_PASS}
     container_name: relohub
     image: relohub
     command: sh run.sh
