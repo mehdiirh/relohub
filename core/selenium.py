@@ -1,5 +1,6 @@
 from time import sleep
 
+from django.conf import settings
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
@@ -9,6 +10,10 @@ from linkedin.models import LinkedinAccount
 def update_linkedin_cookies_with_selenium():
     for account in LinkedinAccount.objects.filter(is_active=True):
         options = webdriver.FirefoxOptions()
+
+        if settings.SELENIUM_HEADLESS:
+            options.add_argument("--headless")
+
         profile = webdriver.FirefoxProfile()
         profile.set_preference("network.proxy.type", 0)
         options.profile = profile
@@ -34,6 +39,8 @@ def update_linkedin_cookies_with_selenium():
         driver.implicitly_wait(10)
 
         if "feed" not in driver.current_url:
+            print()
+            print(driver.current_url)
             input(
                 "Manual login required. Check the browser and then press any key to continue: "
             )

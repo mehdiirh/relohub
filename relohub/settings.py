@@ -123,28 +123,6 @@ GRAPHENE = {
     "RELAY_CONNECTION_MAX_LIMIT": 100,
 }
 
-
-# Internationalization
-LANGUAGE_CODE = env_default("LANGUAGE_CODE", "en-us")
-TIME_ZONE = env_default("TIME_ZONE", "UTC")
-USE_I18N = True
-USE_TZ = True
-
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "static"
-
-# Media
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
-
-# Default primary key field type
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-DATA_UPLOAD_MAX_NUMBER_FIELDS = None
-
-AUTH_USER_MODEL = "user.User"
-
 LINKEDIN_JOB_DESCRIPTION_KEYWORDS = [
     "relocation",
     "relo",
@@ -164,3 +142,27 @@ LINKEDIN_JOB_DESCRIPTION_KEYWORD_COMPLEMENTS = [
     "assistant",
     "cover",
 ]
+
+# Internationalization
+LANGUAGE_CODE = env_default("LANGUAGE_CODE", "en-us")
+TIME_ZONE = env_default("TIME_ZONE", "UTC")
+USE_I18N = True
+USE_TZ = True
+
+# Selenium
+SELENIUM_HEADLESS = env_literal("SELENIUM_HEADLESS")
+
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "static"
+
+# Media
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Default primary key field type
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = None
+
+AUTH_USER_MODEL = "user.User"
