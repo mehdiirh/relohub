@@ -15,7 +15,7 @@ services:
     image: mysql:8.0-debian
     ports:
       - "${DB_BIND_PORT}:3306"
-      - "33060:33060"
+      - "${DB_BIND_PORT_2}:33060"
     networks:
       - relohub
     volumes:
