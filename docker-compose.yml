@@ -73,7 +73,7 @@ services:
   celery-flower:
     restart: always
     image: relohub
-    command: celery -A relohub flower --basic_auth=${FLOWER_USERNAME}:${FLOWER_PASSWORD} -l DEBUG
+    command: celery -A relohub flower --basic_auth=${FLOWER_USERNAME}:${FLOWER_PASSWORD} --auto_refresh=True --url_prefix=flower -l DEBUG
     ports:
       - "${FLOWER_BIND_PORT}:5555"
     networks:
