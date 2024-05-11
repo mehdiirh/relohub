@@ -308,19 +308,15 @@ def process_jobs(account_pk: int, job_pks: list[int]):
 
 @app.task(
     base=Singleton,
-    name="job.get_approved_jobs_skills",
+    name="job.list_approved_jobs",
     time_limit=10 * 60,
     lock_expiry=10 * 60,
 )
-def get_approved_jobs_skills():
+def list_approved_jobs():
     account = get_least_used_account()
     client = account.client
 
-    jobs = Job.objects.filter(
-        status__in=[JobStatus.WAITING_FOR_REVIEW, JobStatus.LISTED],
-        job_skills__isnull=True,
-        is_active=True,
-    )
+    jobs = Job.objects.filter(is_active=True, status=JobStatus.APPROVED)
 
     for job in jobs:
 
@@ -349,6 +345,9 @@ def get_approved_jobs_skills():
                 defaults={"name": name},
             )
             job.job_skills.add(skill_object)
+
+        job.status = JobStatus.LISTED
+        job.save()
 
 
 @app.task(
