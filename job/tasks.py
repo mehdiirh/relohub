@@ -1,3 +1,4 @@
+import re
 from time import sleep
 
 import requests.exceptions
@@ -6,7 +7,7 @@ from celery_singleton.exceptions import DuplicateTaskError
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.utils import timezone
-from linkedin_api.linkedin import default_evade
+from linkedin_api.linkedin import default_evade, get_id_from_urn
 
 from core.exceptions import NoLinkedinAccountError
 from job import JobStatus
@@ -50,26 +51,24 @@ def resolve_company(job_data: dict) -> Company:
         Company: created/updated company instance
     """
 
-    company_data = job_data["companyDetails"][
-        "com.linkedin.voyager.deco.jobs.web.shared.WebCompactJobPostingCompany"
-    ]["companyResolutionResult"]
+    company_data = job_data["company"]
 
     company, created = Company.objects.get_or_create(
-        linkedin_id=company_data["entityUrn"].split(":")[-1],
+        linkedin_id=get_id_from_urn(company_data["entityUrn"]),
         defaults={
             "name": company_data["name"],
-            "universal_name": company_data["universalName"],
         },
     )
 
     if not company.logo:
-        if (
-            logo := company_data.get("logo", {})
-            .get("image", {})
-            .get("com.linkedin.common.VectorImage", {})
-        ):
+        if logo := company_data.get("logoResolutionResult", {}).get("vectorImage", {}):
             biggest_size = list(sorted(logo["artifacts"], key=lambda x: x["width"]))[-1]
             url = logo["rootUrl"] + biggest_size["fileIdentifyingUrlPathSegment"]
+
+            universal_name = re.match(r"/\d/\d+/(.+)_logo\?", url)
+            if universal_name:
+                company.universal_name = universal_name.group(1).replace("_", "-")
+
             result = requests.get(url)
             if result.ok:
                 company.logo.save(
@@ -225,41 +224,41 @@ def process_jobs(account_pk: int, job_pks: list[int]):
     client = account.client
 
     retries = 20
+    errors = 0
+    resolved_jobs = {}
+    while True:
+        try:
+            resolved_jobs = client.get_jobs_batch(
+                jobs.values_list("linkedin_id", flat=True)
+            )
+            break
+        except requests.exceptions.JSONDecodeError:
+            if errors >= retries:
+                raise
+            errors += 1
+            default_evade()
+            continue
+
     for job in jobs:
+        job_data = resolved_jobs[job.linkedin_id]
 
-        errors = 0
-        while True:
-            try:
-                job_data = client.get_job(job.linkedin_id)
-                break
-            except requests.exceptions.JSONDecodeError:
-                if errors >= retries:
-                    raise
-
-                errors += 1
-                default_evade()
-                continue
-
-        # noinspection PyUnboundLocalVariable
-        if job_data["jobState"] != "LISTED":
+        if (not job_data) or (job_data["jobState"] != "LISTED"):
             job.status = JobStatus.EXPIRED
             job.save()
             continue
 
         try:
-            # noinspection PyUnboundLocalVariable
             job.company = resolve_company(job_data)
         except KeyError:
             job.delete()
             continue
 
         job.description = job_data["description"]["text"]
-        job.attributes = job_data["description"]["attributes"]
-        job.remote = job_data["workRemoteAllowed"]
-        job.full_location = job_data["formattedLocation"]
-        job.listed_at = job_data["listedAt"]
+        job.attributes = job_data["description"]["attributesV2"]
+        job.full_location = job_data["location"]["defaultLocalizedName"]
+        job.listed_at = job_data["createdAt"]
 
-        for workplace_type in job_data["workplaceTypes"]:
+        for workplace_type in job_data["*jobWorkplaceTypes"]:
             workplace_type = workplace_type.split(":")[-1]
             if workplace_type == "1":
                 job.on_site = True
@@ -267,31 +266,6 @@ def process_jobs(account_pk: int, job_pks: list[int]):
                 job.remote = True
             if workplace_type == "3":
                 job.hybrid = True
-
-        errors = 0
-        while True:
-            try:
-                job_skills = client.get_job_skills(job.linkedin_id)
-                break
-            except requests.exceptions.JSONDecodeError:
-                if errors >= retries:
-                    raise
-
-                errors += 1
-                default_evade()
-                continue
-
-        # noinspection PyUnboundLocalVariable
-        for skill_data in job_skills.get("skillMatchStatuses", []):
-            skill = skill_data["skill"]
-            name = skill["name"]
-            linkedin_id = skill["entityUrn"].split(":")[-1]
-
-            skill_object, skill_created = JobSkill.objects.get_or_create(
-                linkedin_id=linkedin_id,
-                defaults={"name": name},
-            )
-            job.job_skills.add(skill_object)
 
         # key in description: 1 point
         # key in title: 2 points
@@ -334,6 +308,51 @@ def process_jobs(account_pk: int, job_pks: list[int]):
 
 @app.task(
     base=Singleton,
+    name="job.get_approved_jobs_skills",
+    time_limit=10 * 60,
+    lock_expiry=10 * 60,
+)
+def get_approved_jobs_skills():
+    account = get_least_used_account()
+    client = account.client
+
+    jobs = Job.objects.filter(
+        status__in=[JobStatus.WAITING_FOR_REVIEW, JobStatus.LISTED],
+        job_skills__isnull=True,
+        is_active=True,
+    )
+
+    for job in jobs:
+
+        errors = 0
+        retries = 20
+        while True:
+            try:
+                job_skills = client.get_job_skills(job.linkedin_id)
+                break
+            except requests.exceptions.JSONDecodeError:
+                if errors >= retries:
+                    raise
+
+                errors += 1
+                default_evade()
+                continue
+
+        # noinspection PyUnboundLocalVariable
+        for skill_data in job_skills.get("skillMatchStatuses", []):
+            skill = skill_data["skill"]
+            name = skill["name"]
+            linkedin_id = get_id_from_urn(skill["entityUrn"])
+
+            skill_object, skill_created = JobSkill.objects.get_or_create(
+                linkedin_id=linkedin_id,
+                defaults={"name": name},
+            )
+            job.job_skills.add(skill_object)
+
+
+@app.task(
+    base=Singleton,
     name="job.run_process_jobs",
     lock_expiry=60 * 60,
 )
@@ -350,7 +369,7 @@ def run_process_jobs():
         .distinct()
     )
 
-    chunk = 10
+    chunk = 100
     pending_task_args = []
     for offset in range(0, len(jobs), chunk):
         sliced_jobs = jobs[offset : offset + chunk]
