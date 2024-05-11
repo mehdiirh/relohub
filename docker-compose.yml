@@ -19,7 +19,7 @@ services:
     networks:
       - relohub
     volumes:
-      - database:/var/lib/msql
+      - database:/var/lib/mysql
     cap_add:
       - SYS_NICE
     env_file:
