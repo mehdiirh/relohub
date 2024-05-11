@@ -9,7 +9,7 @@ from django.core.files.base import ContentFile
 from django.utils import timezone
 from linkedin_api.linkedin import default_evade, get_id_from_urn
 
-from core.exceptions import NoLinkedinAccountError
+from core.exceptions import NoLinkedinAccountError, NotValidCompanyError
 from job import JobStatus
 from job.models import JobLocation, JobTitle, Job, Company, JobSkill
 from linkedin.models import LinkedinAccount
@@ -52,6 +52,9 @@ def resolve_company(job_data: dict) -> Company:
     """
 
     company_data = job_data["company"]
+
+    if company_data is None:
+        raise NotValidCompanyError
 
     company, created = Company.objects.get_or_create(
         linkedin_id=get_id_from_urn(company_data["entityUrn"]),
@@ -249,7 +252,7 @@ def process_jobs(account_pk: int, job_pks: list[int]):
 
         try:
             job.company = resolve_company(job_data)
-        except KeyError:
+        except NotValidCompanyError:
             job.delete()
             continue
 
@@ -303,7 +306,6 @@ def process_jobs(account_pk: int, job_pks: list[int]):
             job.status = JobStatus.REJECTED
 
         job.save()
-        default_evade()
 
 
 @app.task(
