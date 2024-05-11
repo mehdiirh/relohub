@@ -252,7 +252,7 @@ def process_jobs(account_pk: int, job_pks: list[int]):
 
         try:
             job.company = resolve_company(job_data)
-        except NotValidCompanyError:
+        except (NotValidCompanyError, AttributeError, KeyError):
             job.delete()
             continue
 
