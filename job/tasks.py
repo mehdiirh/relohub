@@ -261,7 +261,9 @@ def process_jobs(account_pk: int, job_pks: list[int]):
         job.full_location = job_data["location"]["defaultLocalizedName"]
         job.listed_at = job_data["createdAt"]
 
-        for workplace_type in job_data["*jobWorkplaceTypes"]:
+        for workplace_type in job_data.get("*jobWorkplaceTypes") or job_data.get(
+            "jobWorkplaceTypes", []
+        ):
             workplace_type = workplace_type.split(":")[-1]
             if workplace_type == "1":
                 job.on_site = True
