@@ -1,4 +1,3 @@
-import re
 from time import sleep
 
 import requests.exceptions
@@ -56,10 +55,15 @@ def resolve_company(job_data: dict) -> Company:
     if company_data is None:
         raise NotValidCompanyError
 
+    universal_name = company_data["universalName"]
+    if universal_name is None:
+        raise NotValidCompanyError
+
     company, created = Company.objects.get_or_create(
         linkedin_id=get_id_from_urn(company_data["entityUrn"]),
         defaults={
             "name": company_data["name"],
+            "universal_name": universal_name,
         },
     )
 
@@ -67,10 +71,6 @@ def resolve_company(job_data: dict) -> Company:
         if logo := company_data.get("logoResolutionResult", {}).get("vectorImage", {}):
             biggest_size = list(sorted(logo["artifacts"], key=lambda x: x["width"]))[-1]
             url = logo["rootUrl"] + biggest_size["fileIdentifyingUrlPathSegment"]
-
-            universal_name = re.match(r"/\d/\d+/(.+)_logo\?", url)
-            if universal_name:
-                company.universal_name = universal_name.group(1).replace("_", "-")
 
             result = requests.get(url)
             if result.ok:
