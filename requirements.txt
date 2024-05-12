@@ -19,7 +19,7 @@ h11==0.14.0
 humanize==4.9.0
 idna==3.7
 kombu==5.3.7
-linkedin-api @ git+https://github.com/mehdiirh/linkedin-api.git@46b552db499defe180724dae5687b6ec20870e4e
+linkedin-api @ git+https://github.com/mehdiirh/linkedin-api.git@2e4978df7741709624db477436c0bdbdc6518cce
 lxml==5.2.1
 mypy-extensions==1.0.0
 mysqlclient==2.2.4
