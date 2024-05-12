@@ -1,7 +1,25 @@
 import json
 
+from django.contrib import admin
 from django.contrib.admin import ModelAdmin, StackedInline
 from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
+
+
+@admin.action(
+    permissions=["change"],
+    description=_("Active selected %(verbose_name_plural)s"),
+)
+def make_active(_model_admin, _request, queryset):
+    queryset.update(is_active=True)
+
+
+@admin.action(
+    permissions=["change"],
+    description=_("Deactivate selected %(verbose_name_plural)s"),
+)
+def make_inactive(_model_admin, _request, queryset):
+    queryset.update(is_active=False)
 
 
 class BaseModelAdmin(ModelAdmin):
@@ -14,6 +32,12 @@ class BaseModelAdmin(ModelAdmin):
         exclude = super().get_exclude(request, obj) or []
         exclude = list(exclude) + ["metadata"]
         return exclude
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        actions["make_active"] = self.get_action(make_active)
+        actions["make_inactive"] = self.get_action(make_inactive)
+        return actions
 
     @staticmethod
     def _metadata(obj):
