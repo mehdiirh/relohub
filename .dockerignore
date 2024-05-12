@@ -1,5 +1,6 @@
-docker-compose*.yml
-Dockerfile
-.env
-sample.env
-.github
+/docker-compose*.yml
+/Dockerfile
+/.env
+/sample.env
+/.github
+/venv
