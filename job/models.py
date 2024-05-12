@@ -190,12 +190,14 @@ class Job(ModelWithMetadata):
         verbose_name=_("job titles"),
         related_name="jobs",
         limit_choices_to={"is_active": True, "parent__isnull": True},
+        blank=True,
     )
     job_skills = models.ManyToManyField(
         to=JobSkill,
         verbose_name=_("job skills"),
         related_name="jobs",
         limit_choices_to={"is_active": True},
+        blank=True,
     )
 
     points = models.PositiveIntegerField(_("points"), default=0)
