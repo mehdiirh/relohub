@@ -17,7 +17,7 @@ class CompanyAdmin(BaseModelAdmin):
 
 @admin.register(JobTitle)
 class JobTitleAdmin(BaseModelAdmin):
-    list_display = ["title", "linkedin_id", "jobs_count"]
+    list_display = ["title", "linkedin_id", "jobs_count", "is_active"]
     search_fields = ["title", "children__title", "other_names__icontains"]
 
     @remove_exponent_decorator
@@ -37,7 +37,7 @@ class JobSkillAdmin(BaseModelAdmin):
 
 @admin.register(JobLocation)
 class JobLocationAdmin(BaseModelAdmin):
-    list_display = ["title", "linkedin_geo_id", "flag_emoji", "jobs_count"]
+    list_display = ["title", "linkedin_geo_id", "flag_emoji", "jobs_count", "is_active"]
     search_fields = [
         "title",
         "iso_code",
