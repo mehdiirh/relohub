@@ -75,7 +75,9 @@ def resolve_company(job_data: dict) -> Company:
             result = requests.get(url)
             if result.ok:
                 company.logo.save(
-                    company.universal_name + ".png", ContentFile(result.content)
+                    company.universal_name + ".png",
+                    ContentFile(result.content),
+                    save=False,
                 )
                 company.save()
 
